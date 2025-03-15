@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emergency Request</title>
+    <script>
+      // Function to send live location during emergency
+      function sendEmergencyLocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const latitude = position.coords.latitude;
+              const longitude = position.coords.longitude;
+
+              // Send the location to the server
+              fetch("http://localhost:3000/emergency", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  latitude: latitude,
+                  longitude: longitude,
+                  requestTime: new Date().toISOString(),
+                }),
+              })
+                .then((response) => response.json())
+                .then((data) => {
+                  alert("Emergency request sent to the driver.");
+                })
+                .catch((error) => {
+                  console.error("Error sending emergency request:", error);
+                });
+            },
+            (error) => {
+              alert("Unable to retrieve location.");
+            }
+          );
+        } else {
+          alert("Geolocation is not supported by this browser.");
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <button onclick="sendEmergencyLocation()">Send Emergency Location</button>
+  </body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BeatAware - Stress</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+        color: #333;
+      }
+      header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .chart-container {
+        width: 80%;
+        height: 50vh;
+        margin-bottom: 20px;
+      }
+      .calendar-container {
+        width: 80%;
+        overflow-y: auto;
+        max-height: 200px;
+        border: 1px solid #ccc;
+      }
+      .calendar-container table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .calendar-container th,
+      .calendar-container td {
+        border: 1px solid #333;
+        padding: 8px;
+        text-align: center;
+      }
+      .date-picker {
+        margin-bottom: 20px;
+      }
+      .btn {
+        padding: 10px 20px;
+        margin: 5px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .btn:hover {
+        background-color: #0056b3;
+      }
+      .high-stress-level {
+        color: red;
+      }
+      .file-input-container {
+        margin-top: 20px;
+      }
+      .file-input-container input[type="file"] {
+        padding: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Stress Level Statistics</h1>
+    </header>
+    <div class="date-picker">
+      <label for="date">Select Date: </label>
+      <input type="date" id="date" name="date" onchange="updateDate()" />
+    </div>
+    <div class="btn-container">
+      <button class="btn" onclick="exportToExcel()">Export to Excel</button>
+    </div>
+    <div class="file-input-container">
+      <label for="fileInput" class="btn">Choose File to Save Data</label>
+      <input type="file" id="fileInput" />
+    </div>
+    <div class="chart-container">
+      <canvas id="stressChart"></canvas>
+    </div>
+    <div class="calendar-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Stress Level</th>
+          </tr>
+        </thead>
+        <tbody id="data-table">
+          <!-- Data rows will be populated here -->
+        </tbody>
+      </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script>
+      const stressData = {
+        "2025-01-01": 4,
+        "2025-01-02": 3,
+        "2025-01-03": 8,
+        "2025-01-04": 5,
+        "2025-01-05": 7,
+        "2025-01-06": 2,
+      };
+
+      const labels = Object.keys(stressData);
+      const stressLevels = Object.values(stressData);
+
+      const chartData = {
+        labels: labels,
+        datasets: [
+          {
+            label: "Stress Level",
+            data: stressLevels,
+            backgroundColor: stressLevels.map((level) =>
+              level > 7 ? "rgba(255, 0, 0, 0.2)" : "rgba(54, 162, 235, 0.2)"
+            ),
+            borderColor: stressLevels.map((level) =>
+              level > 7 ? "rgba(255, 0, 0, 1)" : "rgba(54, 162, 235, 1)"
+            ),
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      const config = {
+        type: "line",
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: "Stress Level" },
+            },
+          },
+        },
+      };
+
+      const stressChart = new Chart(
+        document.getElementById("stressChart"),
+        config
+      );
+
+      function updateDate() {
+        const selectedDate = document.getElementById("date").value;
+        if (stressData[selectedDate]) {
+          const stressLevel = stressData[selectedDate];
+          const colorClass = stressLevel > 7 ? "high-stress-level" : "";
+
+          document.getElementById("data-table").innerHTML = ` 
+            <tr class="${colorClass}">
+              <td>${selectedDate}</td>
+              <td>${stressLevel}</td>
+            </tr>
+          `;
+
+          stressChart.data.labels = [selectedDate];
+          stressChart.data.datasets[0].data = [stressLevel];
+          stressChart.data.datasets[0].backgroundColor =
+            stressLevel > 7
+              ? "rgba(255, 0, 0, 0.2)"
+              : "rgba(54, 162, 235, 0.2)";
+          stressChart.data.datasets[0].borderColor =
+            stressLevel > 7 ? "rgba(255, 0, 0, 1)" : "rgba(54, 162, 235, 1)";
+          stressChart.update();
+        } else {
+          document.getElementById("data-table").innerHTML =
+            '<tr><td colspan="2">No data available for this date</td></tr>';
+        }
+      }
+
+      function populateTable() {
+        let rows = "";
+        for (const [date, stressLevel] of Object.entries(stressData)) {
+          const colorClass = stressLevel > 7 ? "high-stress-level" : "";
+          rows += `<tr class="${colorClass}"><td>${date}</td><td>${stressLevel}</td></tr>`;
+        }
+        document.getElementById("data-table").innerHTML = rows;
+      }
+
+      function exportToExcel() {
+        const stressDataArray = Object.entries(stressData).map(
+          ([date, level]) => ({
+            Date: date,
+            StressLevel: level,
+          })
+        );
+
+        const stressSheet = XLSX.utils.json_to_sheet(stressDataArray);
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, stressSheet, "Stress Data");
+
+        // Create an Excel file for download
+        XLSX.writeFile(workbook, "HealthStatistics.xlsx");
+      }
+
+      populateTable();
+    </script>
+  </body>
+</html>

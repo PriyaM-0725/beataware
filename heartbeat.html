@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BeatAware - Heart Beat</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+        color: #333;
+      }
+      header {
+        text-align: center;
+        margin: 10px 0;
+      }
+      .chart-container {
+        width: 90%;
+        height: 300px;
+        margin: 10px 0;
+        position: relative;
+      }
+      .calendar-container {
+        width: 90%;
+        overflow-y: auto;
+        max-height: 200px;
+        border: 1px solid #ccc;
+        margin-top: 10px;
+      }
+      .calendar-container table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .calendar-container th,
+      .calendar-container td {
+        border: 1px solid #333;
+        padding: 8px;
+        text-align: center;
+      }
+      .date-picker,
+      .btn-container {
+        margin-bottom: 10px;
+      }
+      .low-heart-rate {
+        color: red;
+      }
+      .btn {
+        padding: 10px 20px;
+        margin: 5px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .btn:hover {
+        background-color: #0056b3;
+      }
+      .heartbeat-display {
+        font-size: 24px;
+        font-weight: bold;
+        margin: 10px;
+        color: #007bff;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Heart Beat Statistics</h1>
+    </header>
+    <div class="date-picker">
+      <label for="date">Select Date: </label>
+      <input type="date" id="date" name="date" onchange="updateDate()" />
+    </div>
+    <div class="btn-container">
+      <button class="btn" onclick="toggleGraph()">Show/Hide Graph</button>
+      <button class="btn" onclick="exportToExcel()">Export to Excel</button>
+    </div>
+    <div class="chart-container">
+      <canvas id="heartbeatChart"></canvas>
+    </div>
+    <div class="heartbeat-display" id="heartbeatDisplay">
+      Current Heartbeat: --
+    </div>
+    <div class="calendar-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Heart Rate</th>
+          </tr>
+        </thead>
+        <tbody id="data-table">
+          <!-- Data rows will be populated here -->
+        </tbody>
+      </table>
+    </div>
+    <audio
+      id="alertSound"
+      src="https://www.soundjay.com/button/beep-07.wav"
+      preload="auto"
+    ></audio>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script>
+      const data = [];
+      const labels = [];
+      const heartRates = [];
+      let counter = 0;
+      let abnormalAlerted = false;
+      let lowHeartRateTimer = null;
+      let currentHeartRate = 0;
+      let heartRateDuration = 0;
+
+      const chartData = {
+        labels: labels,
+        datasets: [
+          {
+            label: "Heart Rate",
+            data: heartRates,
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            borderColor: "rgba(255, 99, 132, 1)",
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      const config = {
+        type: "line",
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              display: true,
+              title: { display: true, text: "Time" },
+            },
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: "Heart Rate (bpm)" },
+            },
+          },
+        },
+      };
+
+      const heartbeatChart = new Chart(
+        document.getElementById("heartbeatChart"),
+        config
+      );
+
+      // Send SMS using server-side API
+      async function sendSMS(message, location) {
+        const response = await fetch("http://localhost:3000/send-sms", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message, location }),
+        });
+        const result = await response.json();
+        console.log(result);
+      }
+
+      function updateDate() {
+        const selectedDate = document.getElementById("date").value;
+        const filteredData = data.filter((d) => d.Date === selectedDate);
+        if (filteredData.length > 0) {
+          populateTable(filteredData);
+        } else {
+          document.getElementById("data-table").innerHTML =
+            '<tr><td colspan="3">No data available for this date</td></tr>';
+        }
+      }
+
+      function populateTable(dataToShow = data) {
+        let rows = "";
+        for (const entry of dataToShow) {
+          const colorClass = entry.HeartRate === 50 ? "low-heart-rate" : "";
+          rows += `<tr class="${colorClass}"><td>${entry.Date}</td><td>${entry.Time}</td><td>${entry.HeartRate}</td></tr>`;
+        }
+        document.getElementById("data-table").innerHTML = rows;
+      }
+
+      function generateRandomHeartRate() {
+        return Math.floor(Math.random() * (100 - 60 + 1)) + 60; // Normal range 60-100 bpm
+      }
+
+      function autoGenerateHeartRate() {
+        counter++;
+        currentHeartRate = counter <= 50 ? generateRandomHeartRate() : 50;
+
+        if (currentHeartRate === 50 && lowHeartRateTimer === null) {
+          lowHeartRateTimer = setTimeout(() => {
+            sendAlert();
+          }, 10000); // Trigger after 10 seconds if heart rate stays below 50
+        } else if (currentHeartRate > 50 && lowHeartRateTimer !== null) {
+          clearTimeout(lowHeartRateTimer); // Reset the timer if heart rate rises
+          lowHeartRateTimer = null;
+        }
+
+        const now = new Date();
+        const dateStr = now.toISOString().split("T")[0];
+        const timeStr = now.toLocaleTimeString();
+
+        data.push({
+          Date: dateStr,
+          Time: timeStr,
+          HeartRate: currentHeartRate,
+        });
+        labels.push(timeStr);
+        heartRates.push(currentHeartRate);
+        if (labels.length > 20) {
+          labels.shift();
+          heartRates.shift();
+        }
+
+        document.getElementById(
+          "heartbeatDisplay"
+        ).textContent = `Current Heartbeat: ${currentHeartRate}`;
+        heartbeatChart.update();
+        populateTable();
+      }
+
+      async function sendAlert() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition((position) => {
+            const location = `${position.coords.latitude}, ${position.coords.longitude}`;
+            const message = `Alert: Heart rate dropped below 50 bpm for more than 10 seconds. Location: ${location}`;
+            sendSMS(message, location);
+          });
+        }
+      }
+
+      function toggleGraph() {
+        const chartContainer = document.querySelector(".chart-container");
+        chartContainer.style.display =
+          chartContainer.style.display === "none" ? "block" : "none";
+      }
+
+      function exportToExcel() {
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "HeartBeat Data");
+
+        // Add red marking for rows with HeartRate = 50
+        worksheet["!cols"] = [{ wch: 10 }, { wch: 8 }, { wch: 12 }];
+        const heartRateIndex = Object.keys(worksheet).filter((key) =>
+          key.match(/\d+/)
+        );
+
+        heartRateIndex.forEach((key) => {
+          if (worksheet[key].v === 50)
+            worksheet[key].s = { fill: { fgColor: { rgb: "FF0000" } } };
+        });
+
+        XLSX.writeFile(workbook, "HeartBeatData.xlsx");
+      }
+
+      setInterval(autoGenerateHeartRate, 2000);
+    </script>
+  </body>
+</html>

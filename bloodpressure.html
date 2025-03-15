@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BeatAware - Blood Pressure</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+        color: #333;
+      }
+      header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .chart-container {
+        width: 80%;
+        height: 50vh;
+        margin-bottom: 20px;
+      }
+      .calendar-container {
+        width: 80%;
+        overflow-y: auto;
+        max-height: 200px;
+        border: 1px solid #ccc;
+      }
+      .calendar-container table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .calendar-container th,
+      .calendar-container td {
+        border: 1px solid #333;
+        padding: 8px;
+        text-align: center;
+      }
+      .date-picker {
+        margin-bottom: 20px;
+      }
+      .btn {
+        padding: 10px 20px;
+        margin: 5px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .btn:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Blood Pressure Statistics</h1>
+    </header>
+    <div class="btn-container">
+      <input type="file" id="file-input" onchange="chooseSaveLocation(event)" />
+      <button class="btn" onclick="generateBloodPressureData()">
+        Start Generation
+      </button>
+    </div>
+    <div class="chart-container">
+      <canvas id="bpChart"></canvas>
+    </div>
+    <div class="calendar-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Blood Pressure</th>
+          </tr>
+        </thead>
+        <tbody id="data-table">
+          <!-- Data rows will be populated here -->
+        </tbody>
+      </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script>
+      let bloodPressureData = [];
+      let workbook = XLSX.utils.book_new();
+      let saveFilePath = "BloodPressureData.xlsx";
+
+      function generateRandomBloodPressure() {
+        return Math.floor(Math.random() * (120 - 80 + 1)) + 80;
+      }
+
+      function generateBloodPressureData() {
+        let count = 0;
+        bloodPressureData = [];
+
+        const interval = setInterval(() => {
+          if (count >= 30) {
+            clearInterval(interval);
+            alert("Your heartbeat is good!");
+            return;
+          }
+
+          const time = new Date().toLocaleTimeString();
+          const bloodPressure = generateRandomBloodPressure();
+          bloodPressureData.push({ time, bloodPressure });
+          updateTable();
+          updateChart();
+          count++;
+        }, 1000);
+      }
+
+      function updateTable() {
+        const tableBody = document.getElementById("data-table");
+        tableBody.innerHTML = bloodPressureData
+          .map(
+            (data) =>
+              `<tr><td>${data.time}</td><td>${data.bloodPressure}</td></tr>`
+          )
+          .join("");
+      }
+
+      function updateChart() {
+        const times = bloodPressureData.map((data) => data.time);
+        const pressures = bloodPressureData.map((data) => data.bloodPressure);
+
+        bpChart.data.labels = times;
+        bpChart.data.datasets[0].data = pressures;
+        bpChart.update();
+      }
+
+      function chooseSaveLocation(event) {
+        const file = event.target.files[0];
+        if (file) {
+          saveFilePath = file.name;
+        }
+      }
+
+      function saveToExcel() {
+        const sheetData = bloodPressureData.map(({ time, bloodPressure }) => ({
+          Time: time,
+          "Blood Pressure": bloodPressure,
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(sheetData);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "BloodPressure");
+        XLSX.writeFile(workbook, saveFilePath);
+      }
+
+      const bpChart = new Chart(document.getElementById("bpChart"), {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: "Blood Pressure",
+              data: [],
+              borderColor: "rgba(54, 162, 235, 1)",
+              backgroundColor: "rgba(54, 162, 235, 0.2)",
+              fill: true,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: "Blood Pressure" },
+            },
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

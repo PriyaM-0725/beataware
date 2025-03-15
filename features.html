@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BeatAware - Features</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #ffebcc;
+        color: #333;
+      }
+      header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+        width: 80%;
+      }
+      .grid-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s;
+        cursor: pointer;
+      }
+      .grid-item:hover {
+        transform: scale(1.05);
+      }
+      .heartbeat {
+        background-color: #ffcccb;
+      }
+      .fever {
+        background-color: #fef3bd;
+      }
+      .stress {
+        background-color: #d3f8e2;
+      }
+      .blood-pressure {
+        background-color: #c3ddfd;
+      }
+      .calories-burned {
+        background-color: #ffe5b4;
+      }
+      .steps-walked {
+        background-color: #e0bbe4;
+      }
+      .nearest-doctor {
+        background-color: #fff3cd;
+        grid-column: span 3;
+      }
+      .grid-item img {
+        width: 50px;
+        height: 50px;
+        margin-bottom: 10px;
+      }
+      .grid-item h2 {
+        margin: 0;
+      }
+      .start-all {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s, transform 0.2s;
+      }
+      .start-all:hover {
+        background-color: #0056b3;
+        transform: scale(1.1);
+      }
+      .download {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s, transform 0.2s;
+      }
+      .download:hover {
+        background-color: #218838;
+        transform: scale(1.1);
+      }
+      .bluetooth-box {
+        position: fixed;
+        top: 70px;
+        left: 10px;
+        background-color: #ffcccb;
+        color: #333;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 10px;
+        width: 200px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        display: none;
+      }
+      /* Emergency Button */
+      .emergency {
+        position: fixed;
+        top: 10px;
+        right: 70px; /* Adjusted to avoid overlap */
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        transition: background-color 0.3s, transform 0.2s;
+      }
+      .emergency:hover {
+        background-color: #c82333;
+        transform: scale(1.1);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>App Features</h1>
+    </header>
+    <button class="start-all" onclick="showBluetoothStatusAndStartFeatures()">
+      &#9658;
+    </button>
+    <button class="download" onclick="downloadData()">&#128190;</button>
+    <div id="bluetooth-box" class="bluetooth-box">
+      Bluetooth status will appear here.
+    </div>
+
+    <!-- Emergency Button -->
+    <button class="emergency" onclick="sendEmergencyLocation()">&#9992;</button>
+
+    <div class="grid-container">
+      <div class="grid-item heartbeat" onclick="location.href='heartbeat.html'">
+        <img
+          src="C:\\Users\\raghu\\Downloads\\feature hear beat.png"
+          alt="Heart Beat"
+        />
+        <h2>Heart Beat</h2>
+      </div>
+      <div class="grid-item fever" onclick="location.href='fever.html'">
+        <img src="C:\\Users\\raghu\\Downloads\\fever.png" alt="Fever" />
+        <h2>Fever</h2>
+      </div>
+      <div class="grid-item stress" onclick="location.href='stress.html'">
+        <img src="C:\\Users\\raghu\\Downloads\\stress logo.png" alt="Stress" />
+        <h2>Stress</h2>
+      </div>
+      <div
+        class="grid-item blood-pressure"
+        onclick="location.href='bloodpressure.html'"
+      >
+        <img src="C:\\Users\\raghu\\Downloads\\bp.png" alt="Blood Pressure" />
+        <h2>Blood Pressure</h2>
+      </div>
+      <div
+        class="grid-item calories-burned"
+        onclick="location.href='caloriesburned.html'"
+      >
+        <img
+          src="C:\\Users\\raghu\\Downloads\\kcal burn logo.webp"
+          alt="Calories Burned"
+        />
+        <h2>Calories Burned</h2>
+      </div>
+      <div
+        class="grid-item steps-walked"
+        onclick="location.href='stepswalked.html'"
+      >
+        <img
+          src="C:\\Users\\raghu\\Downloads\\steps walked logo.jpg"
+          alt="Steps Walked"
+        />
+        <h2>Steps Walked</h2>
+      </div>
+      <div
+        class="grid-item nearest-doctor"
+        onclick="location.href='nearestdoctor.html'"
+      >
+        <img
+          src="C:\\Users\\raghu\\Downloads\\doctor.jpg"
+          alt="Nearest Doctor"
+        />
+        <h2>Nearest Doctor</h2>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script>
+      const heartRateData = [];
+      const bloodPressureData = [];
+      const featureData = {
+        HeartRate: heartRateData,
+        BloodPressure: bloodPressureData,
+      };
+      let heartRateInterval, bloodPressureInterval;
+
+      function generateRandomHeartRate() {
+        return Math.floor(Math.random() * (100 - 60 + 1)) + 60; // Normal range 60-100 bpm
+      }
+
+      function generateRandomBloodPressure() {
+        const systolic = Math.floor(Math.random() * (120 - 90 + 1)) + 90; // Normal range 90-120 mmHg
+        const diastolic = Math.floor(Math.random() * (80 - 60 + 1)) + 60; // Normal range 60-80 mmHg
+        return `${systolic}/${diastolic}`;
+      }
+
+      function autoGenerateHeartRate() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString();
+        const heartRate = generateRandomHeartRate();
+        heartRateData.push({ time: timeStr, heartRate });
+        console.log(`Time: ${timeStr}, Heart Rate: ${heartRate}`);
+      }
+
+      function autoGenerateBloodPressure() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString();
+        const bloodPressure = generateRandomBloodPressure();
+        bloodPressureData.push({ time: timeStr, bloodPressure });
+        console.log(`Time: ${timeStr}, Blood Pressure: ${bloodPressure}`);
+
+        if (bloodPressureData.length >= 30) {
+          clearInterval(bloodPressureInterval);
+        }
+      }
+
+      function showBluetoothStatusAndStartFeatures() {
+        const bluetoothBox = document.getElementById("bluetooth-box");
+        bluetoothBox.style.display = "block";
+
+        navigator.bluetooth
+          .requestDevice({ acceptAllDevices: true })
+          .then((device) => {
+            bluetoothBox.textContent = `Connected to: ${
+              device.name || "Unknown Device"
+            }`;
+            startAllFeatures();
+          })
+          .catch((error) => {
+            console.error("Bluetooth error:", error);
+            bluetoothBox.textContent = "Error connecting to Bluetooth device.";
+          });
+      }
+
+      function startAllFeatures() {
+        console.log("Starting all features...");
+        heartRateInterval = setInterval(autoGenerateHeartRate, 1000);
+        bloodPressureInterval = setInterval(autoGenerateBloodPressure, 1000);
+      }
+
+      function downloadData() {
+        const wb = XLSX.utils.book_new();
+
+        for (const [feature, data] of Object.entries(featureData)) {
+          const sheet = XLSX.utils.json_to_sheet(data);
+          XLSX.utils.book_append_sheet(wb, sheet, feature);
+        }
+
+        XLSX.writeFile(wb, "HealthData.xlsx");
+      }
+
+      // Function to send live location in emergency
+      function sendEmergencyLocation() {
+        // For demonstration purposes, you can use the Geolocation API to get the user's location
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const latitude = position.coords.latitude;
+              const longitude = position.coords.longitude;
+              console.log(`Emergency location: ${latitude}, ${longitude}`);
+              // Here you can send the location to the driver via your backend system
+              alert("Emergency: Location sent to driver!");
+            },
+            (error) => {
+              alert("Unable to retrieve location.");
+            }
+          );
+        } else {
+          alert("Geolocation is not supported by this browser.");
+        }
+      }
+    </script>
+  </body>
+</html>

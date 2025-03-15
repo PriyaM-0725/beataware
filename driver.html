@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Driver-End Ride Request</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #ffffff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+      }
+
+      h1,
+      h2 {
+        text-align: center;
+        color: #343a40;
+      }
+
+      label {
+        display: block;
+        margin-top: 10px;
+        font-weight: bold;
+        color: #495057;
+      }
+
+      input {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+      }
+
+      button {
+        margin-top: 15px;
+        padding: 10px 20px;
+        background: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #0056b3;
+      }
+
+      #rideList {
+        list-style: none;
+        padding: 0;
+      }
+
+      .ride-item {
+        background: #e9ecef;
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .accept-btn,
+      .reject-btn {
+        margin-left: 10px;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .accept-btn {
+        background: #28a745;
+        color: #fff;
+      }
+
+      .reject-btn {
+        background: #dc3545;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Driver-End Ride Request System</h1>
+      <div id="rideForm">
+        <h2>Add a Ride Request</h2>
+        <form id="rideRequestForm">
+          <label for="userName">User Name:</label>
+          <input type="text" id="userName" required />
+
+          <label for="pickupLocation">Pickup Location:</label>
+          <input type="text" id="pickupLocation" required />
+
+          <label for="dropLocation">Drop Location:</label>
+          <input type="text" id="dropLocation" required />
+
+          <label for="fareEstimate">Fare Estimate ($):</label>
+          <input type="number" id="fareEstimate" required />
+
+          <button type="submit">Add Ride Request</button>
+        </form>
+      </div>
+
+      <div id="rideRequests">
+        <h2>Pending Ride Requests</h2>
+        <ul id="rideList">
+          <!-- Ride requests will appear here -->
+        </ul>
+      </div>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const rideList = document.getElementById("rideList");
+        const rideRequestForm = document.getElementById("rideRequestForm");
+
+        // Function to add a ride request
+        rideRequestForm.addEventListener("submit", (event) => {
+          event.preventDefault();
+
+          const userName = document.getElementById("userName").value;
+          const pickupLocation =
+            document.getElementById("pickupLocation").value;
+          const dropLocation = document.getElementById("dropLocation").value;
+          const fareEstimate = document.getElementById("fareEstimate").value;
+
+          const rideItem = document.createElement("li");
+          rideItem.className = "ride-item";
+          rideItem.innerHTML = `
+                    <div>
+                        <strong>${userName}</strong> | 
+                        Pickup: ${pickupLocation} | Drop: ${dropLocation} | Fare: $${fareEstimate}
+                    </div>
+                    <div>
+                        <button class="accept-btn">Accept</button>
+                        <button class="reject-btn">Reject</button>
+                    </div>
+                `;
+
+          // Handle Accept and Reject buttons
+          rideItem
+            .querySelector(".accept-btn")
+            .addEventListener("click", () => {
+              rideItem.style.background = "#d4edda";
+              rideItem.querySelector(".accept-btn").disabled = true;
+              rideItem.querySelector(".reject-btn").disabled = true;
+            });
+
+          rideItem
+            .querySelector(".reject-btn")
+            .addEventListener("click", () => {
+              rideItem.style.background = "#f8d7da";
+              rideItem.querySelector(".accept-btn").disabled = true;
+              rideItem.querySelector(".reject-btn").disabled = true;
+            });
+
+          // Add the ride request to the list
+          rideList.appendChild(rideItem);
+
+          // Reset the form
+          rideRequestForm.reset();
+        });
+      });
+    </script>
+  </body>
+</html>

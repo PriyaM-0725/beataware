@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dial Pad</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f9f9f9;
+      }
+      .dialpad-container {
+        text-align: center;
+        width: 300px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 20px;
+        background-color: #fff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .dialpad-container input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-sizing: border-box;
+      }
+      .keypad {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .key {
+        width: 80px;
+        height: 80px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f0f0f0;
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        user-select: none;
+      }
+      .key:active {
+        background-color: #ddd;
+      }
+      .key span {
+        font-size: 14px;
+        font-weight: normal;
+        color: #666;
+      }
+      .call-button {
+        width: 100%;
+        padding: 15px;
+        font-size: 18px;
+        font-weight: bold;
+        color: white;
+        background-color: #28a745;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      .call-button:hover {
+        background-color: #218838;
+      }
+    </style>
+    <script>
+      function populateNumber() {
+        const params = new URLSearchParams(window.location.search);
+        const number = params.get("number");
+        if (number) {
+          document.getElementById("dial-input").value = number;
+        }
+      }
+
+      function makeCall() {
+        const number = document.getElementById("dial-input").value;
+        if (number) {
+          alert(`Calling ${number}...`);
+          // Replace with real call handling logic for mobile devices or apps
+        } else {
+          alert("No number entered!");
+        }
+      }
+    </script>
+  </head>
+  <body onload="populateNumber()">
+    <div class="dialpad-container">
+      <input type="text" id="dial-input" placeholder="Enter number" disabled />
+      <div class="keypad">
+        <div class="key">1</div>
+        <div class="key">2<br /><span>ABC</span></div>
+        <div class="key">3<br /><span>DEF</span></div>
+        <div class="key">4<br /><span>GHI</span></div>
+        <div class="key">5<br /><span>JKL</span></div>
+        <div class="key">6<br /><span>MNO</span></div>
+        <div class="key">7<br /><span>PQRS</span></div>
+        <div class="key">8<br /><span>TUV</span></div>
+        <div class="key">9<br /><span>WXYZ</span></div>
+        <div class="key">*</div>
+        <div class="key">0<br /><span>+</span></div>
+        <div class="key">#</div>
+      </div>
+      <button class="call-button" onclick="makeCall()">Call</button>
+    </div>
+  </body>
+</html>

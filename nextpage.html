@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Appointment Ticket Booking</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+      }
+      h1 {
+        color: #333;
+      }
+      .seat-container {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        margin-top: 20px;
+      }
+      .seat {
+        padding: 20px;
+        border: 1px solid #ccc;
+        text-align: center;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      .seat.available {
+        background-color: #d4edda;
+      }
+      .seat.booked {
+        background-color: #f8d7da;
+        cursor: not-allowed;
+      }
+      .seat:hover:not(.booked) {
+        background-color: #c3e6cb;
+      }
+      .appointment-details {
+        margin-top: 30px;
+        display: none;
+        padding: 10px;
+        border: 1px solid #ccc;
+        background-color: #f4f4f4;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Book Your Appointment</h1>
+
+    <div id="seat-container" class="seat-container"></div>
+
+    <div id="appointment-details" class="appointment-details">
+      <h2>Appointment Confirmation</h2>
+      <p id="token-name"></p>
+    </div>
+
+    <script>
+      // Generate a unique token
+      function generateToken() {
+        return (
+          "TKN-" +
+          Math.random().toString(36).substring(2, 10).toUpperCase() +
+          "-" +
+          Date.now()
+        );
+      }
+
+      // Check if a seat is already booked
+      function isSeatBooked(seatId) {
+        const bookedSeats = JSON.parse(
+          localStorage.getItem("bookedSeats") || "[]"
+        );
+        return bookedSeats.includes(seatId);
+      }
+
+      // Book a seat
+      function bookSeat(seatId) {
+        const token = generateToken();
+        const hospital = "City Hospital"; // Static for now, could be dynamic based on your setup
+        const date = new Date().toLocaleDateString();
+        const time = new Date().toLocaleTimeString();
+        const doctor = "Dr. John Doe"; // Static for now, could be dynamic
+
+        // Save the booking in localStorage
+        const bookedSeats = JSON.parse(
+          localStorage.getItem("bookedSeats") || "[]"
+        );
+        bookedSeats.push(seatId);
+        localStorage.setItem("bookedSeats", JSON.stringify(bookedSeats));
+
+        // Show the appointment confirmation with the token
+        document.getElementById(
+          "token-name"
+        ).innerText = `Your Appointment Token: ${token} with Dr. ${doctor} at ${time} on ${date}`;
+        document.getElementById("appointment-details").style.display = "block";
+
+        // Disable the booked seat
+        const seat = document.getElementById(`seat-${seatId}`);
+        seat.classList.add("booked");
+        seat.innerText = `Seat ${seatId} (Booked)`;
+        seat.onclick = null; // Disable further clicks
+      }
+
+      // Create seats dynamically
+      function createSeats() {
+        const seatContainer = document.getElementById("seat-container");
+        for (let i = 1; i <= 20; i++) {
+          const seat = document.createElement("div");
+          seat.classList.add("seat");
+          seat.id = `seat-${i}`;
+
+          // Check if the seat is already booked
+          if (isSeatBooked(i)) {
+            seat.classList.add("booked");
+            seat.innerText = `Seat ${i} (Booked)`;
+            seat.onclick = null; // Disable further clicks
+          } else {
+            seat.classList.add("available");
+            seat.innerText = `Seat ${i} (Available)`;
+            seat.onclick = () => bookSeat(i);
+          }
+
+          seatContainer.appendChild(seat);
+        }
+      }
+
+      // Initialize seats when the page loads
+      window.onload = function () {
+        createSeats();
+      };
+    </script>
+  </body>
+</html>

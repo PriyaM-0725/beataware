@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BeatAware - Call Nearest Doctor</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+        color: #333;
+      }
+      header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      #map {
+        width: 90%;
+        height: 60vh;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .contact-info-box {
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        text-align: center;
+        margin-top: 20px;
+      }
+      .contact-info-box h3 {
+        margin: 0;
+        font-size: 1.5em;
+        color: #28a745;
+      }
+      .contact-info-box p {
+        margin: 5px 0;
+      }
+      .contact-info-box button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 4px;
+        background-color: #28a745;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      .contact-info-box button:hover {
+        background-color: #218838;
+      }
+    </style>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBcU14_EJ1MaxgQhC35A-ptE4-sCQ1QgMA"></script>
+    <script>
+      function initMap() {
+        const locations = [
+          {
+            lat: 12.973242172037681,
+            lng: 80.13387940937696,
+            name: "Hospital A",
+            contact: "6382038396",
+          },
+          {
+            lat: 12.943891952121207,
+            lng: 80.23688242405568,
+            name: "Hospital B",
+            contact: "09972899728",
+          },
+          {
+            lat: 12.948851249135235,
+            lng: 80.18979586196487,
+            name: "Hospital C",
+            contact: "04461116111",
+          },
+          {
+            lat: 13.055466681813638,
+            lng: 80.2647653413498,
+            name: "Hospital D",
+            contact: "04428483051",
+          },
+          {
+            lat: 12.945757354051562,
+            lng: 80.1343928112313,
+            name: "Hospital E",
+            contact: "04422210146",
+          },
+        ];
+
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function (position) {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            const map = new google.maps.Map(document.getElementById("map"), {
+              center: { lat: userLat, lng: userLng },
+              zoom: 12,
+            });
+
+            let nearestHospital = null;
+            let nearestDistance = Infinity;
+
+            function calculateDistance(lat1, lon1, lat2, lon2) {
+              const R = 6371; // Earth radius in km
+              const dLat = ((lat2 - lat1) * Math.PI) / 180;
+              const dLon = ((lon2 - lon1) * Math.PI) / 180;
+              const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos((lat1 * Math.PI) / 180) *
+                  Math.cos((lat2 * Math.PI) / 180) *
+                  Math.sin(dLon / 2) *
+                  Math.sin(dLon / 2);
+              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+              return R * c; // Distance in km
+            }
+
+            locations.forEach((location) => {
+              const distance = calculateDistance(
+                userLat,
+                userLng,
+                location.lat,
+                location.lng
+              );
+
+              if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestHospital = location;
+              }
+
+              const marker = new google.maps.Marker({
+                position: { lat: location.lat, lng: location.lng },
+                map: map,
+                title: location.name,
+              });
+
+              const infowindow = new google.maps.InfoWindow({
+                content: `<div><strong>${location.name}</strong><br>Contact: ${location.contact}</div>`,
+              });
+
+              marker.addListener("click", () => {
+                infowindow.open(map, marker);
+              });
+            });
+
+            if (nearestHospital) {
+              const nearestInfo = `
+                            <h3>Nearest Hospital: ${nearestHospital.name}</h3>
+                            <p>Contact: ${nearestHospital.contact}</p>
+                            <p>Distance: ${nearestDistance.toFixed(2)} km</p>
+                        `;
+              document.getElementById("contact-info").innerHTML = `
+                            <div class="contact-info-box">
+                                ${nearestInfo}
+                                <button onclick="goToDialPad('${nearestHospital.contact}')">Call Nearest Hospital</button>
+                                <button onclick="bookAppointment()">Book Appointment</button>
+                            </div>
+                        `;
+
+              const nearestMarker = new google.maps.Marker({
+                position: {
+                  lat: nearestHospital.lat,
+                  lng: nearestHospital.lng,
+                },
+                map: map,
+                title: nearestHospital.name,
+                icon: "http://maps.google.com/mapfiles/ms/icons/green-dot.png",
+              });
+
+              const nearestInfoWindow = new google.maps.InfoWindow({
+                content: `<div><strong>${nearestHospital.name}</strong><br>Contact: ${nearestHospital.contact}</div>`,
+              });
+
+              nearestMarker.addListener("click", () => {
+                nearestInfoWindow.open(map, nearestMarker);
+              });
+            }
+          });
+        } else {
+          alert("Geolocation is not supported by this browser.");
+        }
+      }
+
+      function goToDialPad(number) {
+        window.location.href = `dialpad.html?number=${number}`;
+      }
+
+      function bookAppointment() {
+        window.location.href = "appointment.html"; // Navigate to the calendar page
+      }
+    </script>
+  </head>
+  <body onload="initMap()">
+    <header>
+      <h1>Find the Nearest Hospital</h1>
+    </header>
+    <div id="map"></div>
+    <div id="contact-info"></div>
+  </body>
+</html>

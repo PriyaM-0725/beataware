@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BeatAware - Fever</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+        color: #333;
+      }
+      header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .chart-container {
+        width: 80%;
+        height: 50vh;
+        margin-bottom: 20px;
+      }
+      .calendar-container {
+        width: 80%;
+        overflow-y: auto;
+        max-height: 200px;
+        border: 1px solid #ccc;
+      }
+      .calendar-container table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .calendar-container th,
+      .calendar-container td {
+        border: 1px solid #333;
+        padding: 8px;
+        text-align: center;
+      }
+      .date-picker {
+        margin-bottom: 20px;
+      }
+      .btn {
+        padding: 10px 20px;
+        margin: 5px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .btn:hover {
+        background-color: #0056b3;
+      }
+      .file-upload {
+        margin-bottom: 20px;
+      }
+      .high-fever-level {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Fever Level Statistics</h1>
+    </header>
+    <div class="file-upload">
+      <label for="file">Upload Data File: </label>
+      <input
+        type="file"
+        id="file"
+        accept=".xlsx, .csv"
+        onchange="handleFileUpload()"
+      />
+    </div>
+    <div class="date-picker">
+      <label for="date">Select Date: </label>
+      <input type="date" id="date" name="date" onchange="updateDate()" />
+    </div>
+    <div class="btn-container">
+      <button class="btn" onclick="exportToExcel()">Export to Excel</button>
+    </div>
+    <div class="chart-container">
+      <canvas id="feverChart"></canvas>
+    </div>
+    <div class="calendar-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Fever Level (°C)</th>
+          </tr>
+        </thead>
+        <tbody id="data-table">
+          <!-- Data rows will be populated here -->
+        </tbody>
+      </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script>
+      let feverData = {
+        "2025-01-01": 37.1,
+        "2025-01-02": 36.5,
+        "2025-01-03": 38.2,
+        "2025-01-04": 37.6,
+        "2025-01-05": 36.8,
+        "2025-01-06": 36.3,
+      };
+
+      const labels = Object.keys(feverData);
+      const feverLevels = Object.values(feverData);
+
+      const chartData = {
+        labels: labels,
+        datasets: [
+          {
+            label: "Fever Level (°C)",
+            data: feverLevels,
+            backgroundColor: feverLevels.map((level) =>
+              level > 37.5 ? "rgba(255, 0, 0, 0.2)" : "rgba(54, 162, 235, 0.2)"
+            ),
+            borderColor: feverLevels.map((level) =>
+              level > 37.5 ? "rgba(255, 0, 0, 1)" : "rgba(54, 162, 235, 1)"
+            ),
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      const config = {
+        type: "line",
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: { display: true, text: "Fever Level (°C)" },
+            },
+          },
+        },
+      };
+
+      const feverChart = new Chart(
+        document.getElementById("feverChart"),
+        config
+      );
+
+      function updateDate() {
+        const selectedDate = document.getElementById("date").value;
+        if (feverData[selectedDate]) {
+          const feverLevel = feverData[selectedDate];
+          const colorClass = feverLevel > 37.5 ? "high-fever-level" : "";
+
+          document.getElementById("data-table").innerHTML = ` 
+            <tr class="${colorClass}">
+              <td>${selectedDate}</td>
+              <td>${feverLevel}°C</td>
+            </tr>
+          `;
+
+          feverChart.data.labels = [selectedDate];
+          feverChart.data.datasets[0].data = [feverLevel];
+          feverChart.data.datasets[0].backgroundColor =
+            feverLevel > 37.5
+              ? "rgba(255, 0, 0, 0.2)"
+              : "rgba(54, 162, 235, 0.2)";
+          feverChart.data.datasets[0].borderColor =
+            feverLevel > 37.5 ? "rgba(255, 0, 0, 1)" : "rgba(54, 162, 235, 1)";
+          feverChart.update();
+        } else {
+          document.getElementById("data-table").innerHTML =
+            '<tr><td colspan="2">No data available for this date</td></tr>';
+        }
+      }
+
+      function populateTable() {
+        let rows = "";
+        for (const [date, feverLevel] of Object.entries(feverData)) {
+          const colorClass = feverLevel > 37.5 ? "high-fever-level" : "";
+          rows += `<tr class="${colorClass}"><td>${date}</td><td>${feverLevel}°C</td></tr>`;
+        }
+        document.getElementById("data-table").innerHTML = rows;
+      }
+
+      function exportToExcel() {
+        const feverDataArray = Object.entries(feverData).map(
+          ([date, level]) => ({
+            Date: date,
+            FeverLevel: level,
+          })
+        );
+
+        const feverSheet = XLSX.utils.json_to_sheet(feverDataArray);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, feverSheet, "Fever Data");
+
+        XLSX.writeFile(workbook, "HealthStatistics.xlsx");
+      }
+
+      function handleFileUpload() {
+        const fileInput = document.getElementById("file");
+        const file = fileInput.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const workbook = XLSX.read(event.target.result, { type: "binary" });
+            const sheetName = workbook.SheetNames[0];
+            const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+            feverData = {};
+            data.forEach((row) => {
+              feverData[row.Date] = row.FeverLevel;
+            });
+            populateTable();
+            updateChart();
+          };
+          reader.readAsBinaryString(file);
+        }
+      }
+
+      function updateChart() {
+        const labels = Object.keys(feverData);
+        const feverLevels = Object.values(feverData);
+
+        feverChart.data.labels = labels;
+        feverChart.data.datasets[0].data = feverLevels;
+        feverChart.data.datasets[0].backgroundColor = feverLevels.map((level) =>
+          level > 37.5 ? "rgba(255, 0, 0, 0.2)" : "rgba(54, 162, 235, 0.2)"
+        );
+        feverChart.data.datasets[0].borderColor = feverLevels.map((level) =>
+          level > 37.5 ? "rgba(255, 0, 0, 1)" : "rgba(54, 162, 235, 1)"
+        );
+        feverChart.update();
+      }
+
+      populateTable();
+    </script>
+  </body>
+</html>

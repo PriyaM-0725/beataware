@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BeatAware - Calories Burned</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+        color: #333;
+      }
+      header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .chart-container {
+        width: 80%;
+        height: 50vh;
+        margin-bottom: 20px;
+      }
+      .calendar-container {
+        width: 80%;
+      }
+      .calendar-container table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .calendar-container th,
+      .calendar-container td {
+        border: 1px solid #333;
+        padding: 8px;
+        text-align: center;
+      }
+      .date-picker {
+        margin-bottom: 20px;
+      }
+      .high-calories-burned {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Calories Burned Statistics</h1>
+    </header>
+    <div class="date-picker">
+      <label for="date">Select Date: </label>
+      <input type="date" id="date" name="date" onchange="updateDate()" />
+    </div>
+    <div class="chart-container">
+      <canvas id="caloriesBurnedChart"></canvas>
+    </div>
+    <div class="calendar-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Calories Burned</th>
+          </tr>
+        </thead>
+        <tbody id="data-table">
+          <!-- Data rows will be populated here -->
+        </tbody>
+      </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      const data = {
+        "2025-01-01": 250,
+        "2025-01-02": 300,
+        "2025-01-03": 450,
+        "2025-01-04": 380,
+        "2025-01-05": 200,
+        "2025-01-06": 270,
+      };
+
+      const labels = Object.keys(data);
+      const caloriesBurned = Object.values(data);
+
+      const chartData = {
+        labels: labels,
+        datasets: [
+          {
+            label: "Calories Burned",
+            data: caloriesBurned,
+            backgroundColor: caloriesBurned.map((cal) =>
+              cal > 400 ? "rgba(255, 0, 0, 0.2)" : "rgba(255, 159, 64, 0.2)"
+            ),
+            borderColor: caloriesBurned.map((cal) =>
+              cal > 400 ? "rgba(255, 0, 0, 1)" : "rgba(255, 159, 64, 1)"
+            ),
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      const config = {
+        type: "line",
+        data: chartData,
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      };
+
+      const caloriesBurnedChart = new Chart(
+        document.getElementById("caloriesBurnedChart"),
+        config
+      );
+
+      function updateDate() {
+        const selectedDate = document.getElementById("date").value;
+        console.log("Selected Date:", selectedDate);
+
+        if (data[selectedDate]) {
+          const calories = data[selectedDate];
+          const colorClass = calories > 400 ? "high-calories-burned" : "";
+
+          document.getElementById("data-table").innerHTML = `
+                    <tr class="${colorClass}">
+                        <td>${selectedDate}</td>
+                        <td>${calories}</td>
+                    </tr>
+                `;
+
+          const newLabel = [selectedDate];
+          const newData = [calories];
+
+          caloriesBurnedChart.data.labels = newLabel;
+          caloriesBurnedChart.data.datasets[0].data = newData;
+          caloriesBurnedChart.data.datasets[0].backgroundColor =
+            calories > 400 ? "rgba(255, 0, 0, 0.2)" : "rgba(255, 159, 64, 0.2)";
+          caloriesBurnedChart.data.datasets[0].borderColor =
+            calories > 400 ? "rgba(255, 0, 0, 1)" : "rgba(255, 159, 64, 1)";
+          caloriesBurnedChart.update();
+        } else {
+          document.getElementById("data-table").innerHTML =
+            '<tr><td colspan="2">No data available for this date</td></tr>';
+        }
+      }
+
+      function populateTable() {
+        let rows = "";
+        for (const [date, calories] of Object.entries(data)) {
+          const colorClass = calories > 400 ? "high-calories-burned" : "";
+          rows += `<tr class="${colorClass}"><td>${date}</td><td>${calories}</td></tr>`;
+        }
+        document.getElementById("data-table").innerHTML = rows;
+      }
+
+      populateTable();
+    </script>
+  </body>
+</html>
